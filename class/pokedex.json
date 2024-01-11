@@ -1,0 +1,37 @@
+[
+    { 
+        "img" :"image/pikatchu.png",
+        "nom" : "Pikatchu" ,
+        "point_de_vie" : "35" ,
+        " attaque" : "55" ,
+        "dfense"  : "40" ,
+        "type" :["Electric"]
+
+    },
+    {
+        "img" :"image/Charmander.png",
+        "nom" : "Charmander",
+        "point_de_vie" : "45",
+        "attaque" : "49",
+        "defense" : "49",
+        "type" :["Grass","Poison"]
+    },
+
+    {
+         "img" :"image/Eevee.png",
+        "nom" : "Eevee",
+        "point_de_vie" : "55",
+        "attaque" : "55",
+        "defense" : "50",
+        "type"  :["Normal"]
+    },
+
+    {
+        "img" :"image/Jigglypuff.png",
+        "nom" : "Jigglypuff",
+        "point_de_vie" : "115",
+        " attaque"  : "45",
+        "defense"  : "20",
+        "type"    :["Normal","Fairy"]
+    }
+]
