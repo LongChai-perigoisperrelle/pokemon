@@ -1,15 +1,17 @@
 import pygame
-import sys 
+import sys
 import json
 import os
 
-with open('class/pokedex.json','r') as file :
-     pokemon_data = json.load(file)
+# Charger les données du Pokédex depuis le fichier pokedex.json
+with open('class/pokedex.json', 'r') as file:
+    pokemon_data = json.load(file)
 
 pygame.init()
 
 screen = pygame.display.set_mode((800, 600))
 pygame.display.set_caption("Pokémon Game")
+
 # Charger les images des Pokémon dans un dictionnaire
 pokemon_images = {}
 for pokemon in pokemon_data:
@@ -20,46 +22,78 @@ for pokemon in pokemon_data:
         print(f"Erreur : Le fichier image {image_path} n'existe pas.")
 
 
+class PokemonSprite(pygame.sprite.Sprite):
+    def __init__(self, pokemon, x, y):
+        super().__init__()
+        self.pokemon = pokemon
+        self.image = pokemon_images[pokemon["nom"]]
+        self.rect = self.image.get_rect(topleft=(x, y))
+        self.max_hp = pokemon["point_de_vie"]
+        self.current_hp = self.max_hp
+
+    def draw_health_bar(self, screen):
+        bar_width = 60
+        bar_height = 10
+        bar_x = self.rect.x
+        bar_y = self.rect.y - 15
+
+        pygame.draw.rect(screen, (255, 0, 0), (bar_x, bar_y, bar_width, bar_height))  
+        pygame.draw.rect(screen, (0, 255, 0), (bar_x, bar_y, int(bar_width * (self.current_hp / self.max_hp)), bar_height)) 
+
+
 class Combat:
     def __init__(self, player_pokemon, opponent_pokemon):
-        self.player_pokemon = player_pokemon
-        self.opponent_pokemon = opponent_pokemon
+        self.player_sprite = PokemonSprite(player_pokemon, 100, 200)
+        self.opponent_sprite = PokemonSprite(opponent_pokemon, 500, 200)
 
     def calculate_damage(self, attacker, defender):
         damage = (attacker["attaque"] / defender["defense"]) * 10
         return damage
 
     def fight(self):
-        player_damage = self.calculate_damage(self.player_pokemon, self.opponent_pokemon)
-        opponent_damage = self.calculate_damage(self.opponent_pokemon, self.player_pokemon)
+        player_damage = self.calculate_damage(self.player_sprite.pokemon, self.opponent_sprite.pokemon)
+        opponent_damage = self.calculate_damage(self.opponent_sprite.pokemon, self.player_sprite.pokemon)
 
-        self.opponent_pokemon["hp"] -= player_damage
-        self.player_pokemon["hp"] -= opponent_damage
+        self.opponent_sprite.current_hp -= player_damage
+        self.player_sprite.current_hp -= opponent_damage
 
-        print(f"{self.player_pokemon['nom']} inflige {player_damage} dégat à {self.opponent_pokemon['nom']}.")
-        print(f"{self.opponent_pokemon['nom']} inflige {opponent_damage} dégat à {self.player_pokemon['nom']}.")
+        print(f"{self.player_sprite.pokemon['nom']} inflige {player_damage} dégât à {self.opponent_sprite.pokemon['nom']}.")
+        print(f"{self.opponent_sprite.pokemon['nom']} inflige {opponent_damage} dégât à {self.player_sprite.pokemon['nom']}.")
 
-        if self.opponent_pokemon["hp"] <= 0:
-            print(f"{self.opponent_pokemon['nom']} a été vaincu !")
-        elif self.player_pokemon["hp"] <= 0:
-            print(f"{self.player_pokemon['nom']} a été vaincu !")
+    def draw_battle(self):
+        screen.fill((255, 255, 255))
+
+        # Afficher les images des Pokémon et leurs barres de vie
+        screen.blit(self.player_sprite.image, self.player_sprite.rect)
+        self.player_sprite.draw_health_bar(screen)
+
+        screen.blit(self.opponent_sprite.image, self.opponent_sprite.rect)
+        self.opponent_sprite.draw_health_bar(screen)
+
+        pygame.display.flip()
 
 
+# Pokémon de test
 player_pokemon = {
-    "nom": "Pikatchu",
-    "hp": 35,
-    "attaque": 55,
-    "defense": 40,
-    "type": ["Elecric"]
+    "img": "image/Charmander.png",
+    "nom": "Charmander",
+    "point_de_vie": 45,
+    "attaque": 49,
+    "defense": 49,
+    "type": ["Feu"]
 }
+
 opponent_pokemon = {
+    "img": "image/Eevee.png",
     "nom": "Eevee",
-    "hp": 55,
+    "point_de_vie": 55,
     "attaque": 55,
     "defense": 50,
     "type": ["Nature"]
 }
+
 combat = Combat(player_pokemon, opponent_pokemon)
+
 # Boucle principale
 running = True
 while running:
@@ -67,24 +101,10 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    # Effacer l'écran
-    screen.fill((255, 255, 255))
-
-    # Afficher les images des Pokémon
-    x_player = 100
-    x_opponent = 500
-    y = 200
-
-    screen.blit(pokemon_images[player_pokemon["nom"]], (x_player, y))
-    screen.blit(pokemon_images[opponent_pokemon["nom"]], (x_opponent, y))
-
-    # Afficher le résultat du combat
-    combat.fight()
-
-    # Mettre à jour l'écran
-    pygame.display.flip()
-
- # Quitter Pygame
+    
+    combat.draw_battle()
+combat.fight()
 pygame.quit()
 sys.exit()
-
+     
+        

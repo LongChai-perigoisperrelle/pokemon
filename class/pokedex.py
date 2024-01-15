@@ -24,7 +24,7 @@ class GUI:
 
     def select_pokemon(self, mouse_pos):
         for index, image in enumerate(pokemon_images):
-            x = index * 200
+            x = index * 300
             y = 0
             rect = image.get_rect(topleft=(x, y))
             if rect.collidepoint(mouse_pos):
@@ -35,7 +35,7 @@ class GUI:
         font = pygame.font.Font(None, 24)
         for index, pokemon in enumerate(pokemon_data):
             x = index * 200
-            y = 200
+            y = 300
             text_surface = font.render(pokemon["nom"], True, (0, 0, 0))
             screen.blit(text_surface, (x, y))
 

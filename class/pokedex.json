@@ -1,11 +1,11 @@
 [
     { 
-        "img" :"image/pikatchu.png",
-        "nom" : "Pikatchu" ,
-        "point_de_vie" : "35" ,
-        " attaque" : "55" ,
-        "dfense"  : "40" ,
-        "type" :["Electric"]
+        "img" :"image/osselait.jpg",
+        "nom" : "Osselait" ,
+        "point_de_vie" : "50" ,
+        " attaque" : "50" ,
+        "defense"  : "95" ,
+        "type" :["Terre"]
 
     },
     {
@@ -14,7 +14,7 @@
         "point_de_vie" : "45",
         "attaque" : "49",
         "defense" : "49",
-        "type" :["Grass","Poison"]
+        "type" :["Feu"]
     },
 
     {
@@ -26,12 +26,15 @@
         "type"  :["Normal"]
     },
 
+   
     {
-        "img" :"image/Jigglypuff.png",
-        "nom" : "Jigglypuff",
-        "point_de_vie" : "115",
-        " attaque"  : "45",
-        "defense"  : "20",
-        "type"    :["Normal","Fairy"]
+        "img":"image/Carabaffe.png",
+        "nom":"Carabaffe",
+        "point_de_vie":"59",
+        " attaque":"63",
+        "defense":"80",
+        "type":["Eau"]
+        
     }
+
 ]
