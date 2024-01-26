@@ -3,108 +3,123 @@ import sys
 import json
 import os
 
-# Charger les données du Pokédex depuis le fichier pokedex.json
-with open('class/pokedex.json', 'r') as file:
-    pokemon_data = json.load(file)
-
 pygame.init()
 
+# Initialisation de l'écran
 screen = pygame.display.set_mode((800, 600))
-pygame.display.set_caption("Pokémon Game")
+pygame.display.set_caption("Jeu Pokémon")
 
-# Charger les images des Pokémon dans un dictionnaire
+# Chargement de l'image de fond
+background_image = pygame.image.load("image/FOND.png").convert()
+largeur = 800
+hauteur = 600
+background_image = pygame.transform.scale(background_image, (largeur, hauteur))
+
+# Dictionnaire pour stocker les images des Pokémon
 pokemon_images = {}
-for pokemon in pokemon_data:
-    image_path = os.path.join(os.getcwd(), pokemon["img"])
-    if os.path.exists(image_path):
-        pokemon_images[pokemon["nom"]] = pygame.image.load(image_path)
-    else:
-        print(f"Erreur : Le fichier image {image_path} n'existe pas.")
-
-
-class PokemonSprite(pygame.sprite.Sprite):
-    def __init__(self, pokemon, x, y):
-        super().__init__()
-        self.pokemon = pokemon
-        self.image = pokemon_images[pokemon["nom"]]
-        self.rect = self.image.get_rect(topleft=(x, y))
-        self.max_hp = pokemon["point_de_vie"]
-        self.current_hp = self.max_hp
-
-    def draw_health_bar(self, screen):
-        bar_width = 60
-        bar_height = 10
-        bar_x = self.rect.x
-        bar_y = self.rect.y - 15
-
-        pygame.draw.rect(screen, (255, 0, 0), (bar_x, bar_y, bar_width, bar_height))  
-        pygame.draw.rect(screen, (0, 255, 0), (bar_x, bar_y, int(bar_width * (self.current_hp / self.max_hp)), bar_height)) 
-
+with open('class/pokedex.json', 'r') as file:
+    pokemon_data = json.load(file)
+    for pokemon in pokemon_data:
+        chemin_image = os.path.join(os.getcwd(), pokemon["img"])
+        if os.path.exists(chemin_image):
+            pokemon_images[pokemon["nom"]] = pygame.image.load(chemin_image)
+        else:
+            print(f"Erreur : Le fichier image {chemin_image} n'existe pas.")
 
 class Combat:
-    def __init__(self, player_pokemon, opponent_pokemon):
-        self.player_sprite = PokemonSprite(player_pokemon, 100, 200)
-        self.opponent_sprite = PokemonSprite(opponent_pokemon, 500, 200)
+    def __init__(self, pokemon_joueur, pokemon_adversaire):
+        self.pokemon_joueur = pokemon_joueur
+        self.pokemon_adversaire = pokemon_adversaire
 
-    def calculate_damage(self, attacker, defender):
-        damage = (attacker["attaque"] / defender["defense"]) * 10
-        return damage
+    def calculer_degats(self, attaquant, defenseur):
+        degats = (attaquant["attaque"] / defenseur["defense"]) * 10
+        return degats
 
-    def fight(self):
-        player_damage = self.calculate_damage(self.player_sprite.pokemon, self.opponent_sprite.pokemon)
-        opponent_damage = self.calculate_damage(self.opponent_sprite.pokemon, self.player_sprite.pokemon)
+    def dessiner_barres_de_vie(self, x_joueur, y_joueur, x_adversaire, y_adversaire):
+        largeur_barre_de_vie = 100
+        hauteur_barre_de_vie = 30
 
-        self.opponent_sprite.current_hp -= player_damage
-        self.player_sprite.current_hp -= opponent_damage
+        # Barre de vie du joueur
+        pourcentage_vie_joueur = self.pokemon_joueur["hp"] / self.pokemon_joueur.get("max_hp", self.pokemon_joueur["hp"])
+        couleur_joueur = (0, 255, 0) if pourcentage_vie_joueur > 0.6 else (255, 255, 0) if pourcentage_vie_joueur > 0.3 else (255, 0, 0)
+        pygame.draw.rect(screen, couleur_joueur, (x_joueur, y_joueur - 20, largeur_barre_de_vie * pourcentage_vie_joueur, hauteur_barre_de_vie))
 
-        print(f"{self.player_sprite.pokemon['nom']} inflige {player_damage} dégât à {self.opponent_sprite.pokemon['nom']}.")
-        print(f"{self.opponent_sprite.pokemon['nom']} inflige {opponent_damage} dégât à {self.player_sprite.pokemon['nom']}.")
+        # Barre de vie de l'adversaire
+        pourcentage_vie_adversaire = self.pokemon_adversaire["hp"] / self.pokemon_adversaire.get("max_hp", self.pokemon_adversaire["hp"])
+        couleur_adversaire = (0, 255, 0) if pourcentage_vie_adversaire > 0.6 else (255, 255, 0) if pourcentage_vie_adversaire > 0.3 else (255, 0, 0)
+        pygame.draw.rect(screen, couleur_adversaire, (x_adversaire, y_adversaire - 20, largeur_barre_de_vie * pourcentage_vie_adversaire, hauteur_barre_de_vie))
 
-    def draw_battle(self):
-        screen.fill((255, 255, 255))
+    def combat(self):
+        degats_joueur = self.calculer_degats(self.pokemon_joueur, self.pokemon_adversaire)
+        degats_adversaire = self.calculer_degats(self.pokemon_adversaire, self.pokemon_joueur)
 
-        # Afficher les images des Pokémon et leurs barres de vie
-        screen.blit(self.player_sprite.image, self.player_sprite.rect)
-        self.player_sprite.draw_health_bar(screen)
+        self.pokemon_adversaire["hp"] -= degats_joueur
+        self.pokemon_joueur["hp"] -= degats_adversaire
 
-        screen.blit(self.opponent_sprite.image, self.opponent_sprite.rect)
-        self.opponent_sprite.draw_health_bar(screen)
+        print(f"{self.pokemon_joueur['nom']} inflige {degats_joueur} dégât à {self.pokemon_adversaire['nom']}.")
+        print(f"{self.pokemon_adversaire['nom']} inflige {degats_adversaire} dégât à {self.pokemon_joueur['nom']}.")
 
+        if self.pokemon_adversaire["hp"] <= 0:
+            print(f"{self.pokemon_adversaire['nom']} a été vaincu !")
+        elif self.pokemon_joueur["hp"] <= 0:
+            print(f"{self.pokemon_joueur['nom']} a été vaincu !")
+
+    def afficher_vainqueur(self, vainqueur):
+        texte = font.render(f"{vainqueur['nom']} est le vainqueur !", True, (255, 255, 255))
+        rect_texte = texte.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
+        screen.blit(texte, rect_texte)
         pygame.display.flip()
+        pygame.time.delay(3000)
 
-
-# Pokémon de test
-player_pokemon = {
+# Données du Pokémon du joueur
+pokemon_joueur = {
     "img": "image/Charmander.png",
     "nom": "Charmander",
-    "point_de_vie": 45,
+    "hp": 45,
     "attaque": 49,
     "defense": 49,
     "type": ["Feu"]
 }
 
-opponent_pokemon = {
+# Données du Pokémon adverse
+pokemon_adversaire = {
     "img": "image/Eevee.png",
     "nom": "Eevee",
-    "point_de_vie": 55,
+    "hp": 55,
     "attaque": 55,
     "defense": 50,
     "type": ["Nature"]
 }
 
-combat = Combat(player_pokemon, opponent_pokemon)
+combat = Combat(pokemon_joueur, pokemon_adversaire)
 
-# Boucle principale
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-    
-    combat.draw_battle()
-combat.fight()
+    screen.blit(background_image, (0, 0))
+
+    x_joueur = 100
+    x_adversaire = 500
+    y_joueur = 200
+    y_adversaire = 400
+
+    screen.blit(pokemon_images[pokemon_joueur["nom"]], (x_joueur, y_adversaire))
+    screen.blit(pokemon_images[pokemon_adversaire["nom"]], (x_adversaire, y_joueur))
+
+    combat.dessiner_barres_de_vie(x_joueur, y_joueur, x_adversaire, y_adversaire)
+
+    pygame.display.flip()
+
+combat.combat()
+
+if pokemon_joueur["hp"] <= 0:
+    combat.afficher_vainqueur(pokemon_adversaire)
+elif pokemon_adversaire["hp"] <= 0:
+    combat.afficher_vainqueur(pokemon_joueur)
+
 pygame.quit()
 sys.exit()
-     
-        
+
